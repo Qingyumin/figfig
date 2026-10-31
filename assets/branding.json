@@ -1,0 +1,47 @@
+{
+  "design": "Four-blade multi-color windmill adapted for light & dark themes",
+  "checks": [
+    {
+      "theme": "light",
+      "sizes": [
+        16,
+        20,
+        24,
+        32,
+        40,
+        48,
+        64,
+        128,
+        256
+      ],
+      "colors": [
+        "#d92b3a",
+        "#0e74bc",
+        "#e0921f",
+        "#168a74"
+      ],
+      "transparent": true
+    },
+    {
+      "theme": "dark",
+      "sizes": [
+        16,
+        20,
+        24,
+        32,
+        40,
+        48,
+        64,
+        128,
+        256
+      ],
+      "colors": [
+        "#f24858",
+        "#3698eb",
+        "#f7b038",
+        "#28b89e"
+      ],
+      "transparent": true
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FigFig 1.2.0</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" title="FigFig · 本地只读设计查看器">
+      <img id="brand-logo-img" class="brand-logo" src="figfig-light.svg" alt="FigFig 四色风车标志" draggable="false">
+      <div class="brand-copy">
+        <div class="brand-title-row">
+          <strong>FigFig</strong>
+          <span class="badge-lossless">只读</span>
+        </div>
+        <small class="brand-tagline">本地设计，轻快查看</small>
+      </div>
+    </div>
+
+    <div id="doc-tabs" class="doc-tabs" role="tablist" aria-label="已打开文档"></div>
+
+    <div class="topbar-actions">
+      <button id="btn-open" class="btn btn-primary" title="打开本地 .fig / .deck 文件 (Ctrl+O)">
+        <svg viewBox="0 0 24 24" class="icon"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
+        <span>打开 .fig</span>
+      </button>
+      <div class="dropdown-wrap">
+        <button id="btn-recent" class="btn" title="快速打开本机检测到的 .fig 文件或历史记录">
+          <span>快速打开</span>
+          <svg viewBox="0 0 24 24" class="icon icon-sm"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div id="recent-menu" class="dropdown-menu" hidden></div>
+      </div>
+      <button id="btn-sample" class="btn" title="打开示例 (.fig)">
+        <span>示例库</span>
+      </button>
+      <span class="v-sep"></span>
+      <button id="btn-mcp" class="btn" title="配置 MCP 协议供 VS Code / Claude / Cursor 直接读取设计稿">
+        <svg viewBox="0 0 24 24" class="icon"><path d="M12 2v6"/><path d="M12 16v6"/><path d="M4.93 4.93l4.24 4.24"/><path d="M14.83 14.83l4.24 4.24"/><path d="M2 12h6"/><path d="M16 12h6"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>MCP 协议</span>
+      </button>
+      <button id="btn-integrity" class="btn" title="文件指纹与兼容性诊断">
+        <svg viewBox="0 0 24 24" class="icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+        <span id="sha-badge">SHA-256 校验</span>
+      </button>
+      <button id="btn-theme" class="btn" title="切换主题（浅色 / 暖色 / 暗色）" aria-label="切换主题">
+        <svg viewBox="0 0 24 24" class="icon"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        <span id="theme-label">浅色</span>
+      </button>
+      <button id="btn-help" class="icon-btn" title="快捷键与操作指南 (?)" aria-label="操作指南">
+        <span>?</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- Left Navigation Panel -->
+    <aside id="navigation-panel" class="sidebar" aria-label="页面与图层导航">
+      <div class="nav-section">
+        <div class="nav-label-row">
+          <label for="page-select">页面 (Pages)</label>
+          <span id="page-count-badge" class="pill-count">0</span>
+        </div>
+        <select id="page-select" class="select-box" aria-label="选择页面"></select>
+      </div>
+
+      <div class="search-section">
+        <div class="search-input-wrap">
+          <svg viewBox="0 0 24 24" class="icon search-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search-input" type="search" placeholder="秒搜画板/图层/文案 (Ctrl+F)" maxlength="200" aria-label="搜索设计稿内容">
+        </div>
+        <div class="search-options">
+          <label class="checkbox-label" title="勾选后跨全文件所有页面搜索">
+            <input id="search-all-pages" type="checkbox" checked>
+            <span>跨全部页面搜索</span>
+          </label>
+          <label class="checkbox-label" title="显示 Figma 内部 Symbols/组件库隐藏页">
+            <input id="include-internal" type="checkbox">
+            <span>含内部组件页</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="nav-tabs" role="tablist">
+        <button id="tab-frames" class="nav-tab active" role="tab" aria-selected="true">
+          <span>画板</span>
+          <small id="count-frames"></small>
+        </button>
+        <button id="tab-layers" class="nav-tab" role="tab" aria-selected="false">
+          <span>图层树</span>
+          <small id="count-layers"></small>
+        </button>
+        <button id="tab-assets" class="nav-tab" role="tab" aria-selected="false">
+          <span>原图包</span>
+          <small id="count-assets"></small>
+        </button>
+      </div>
+
+      <div id="layer-breadcrumbs" class="breadcrumbs" hidden></div>
+
+      <div id="nav-list" class="nav-list" role="list" aria-label="导航列表"></div>
+      <button id="btn-load-more" class="btn-more" hidden>加载更多...</button>
+    </aside>
+
+    <div id="resize-sidebar" class="panel-resizer" role="separator" tabindex="0" aria-orientation="vertical" aria-controls="navigation-panel" aria-label="调整目录宽度" title="拖动调整目录宽度；双击恢复默认宽度"></div>
+
+    <!-- Center Infinite Canvas / Gallery -->
+    <section class="canvas-area" aria-label="矢量画布">
+      <div class="canvas-toolbar">
+        <div class="frame-title-group">
+          <span id="current-frame-title" class="frame-title">正在准备画布...</span>
+          <span id="render-perf-badge" class="perf-badge" hidden>0 ms</span>
+        </div>
+
+        <div class="view-mode-group" role="group" aria-label="视图模式">
+          <button id="mode-canvas" class="seg-btn active" title="单画板无级缩放精览">画布精览</button>
+          <button id="mode-gallery" class="seg-btn" title="当前页全部画板网格总览">网格总览</button>
+        </div>
+
+        <div class="tool-toggles">
+          <button id="toggle-inspect" class="tool-btn active" title="画布内悬停高亮与点击穿透选图层 (I)">
+            <svg viewBox="0 0 24 24" class="icon icon-sm"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
+            <span>点选图层</span>
+          </button>
+          <button id="toggle-measure" class="tool-btn" title="智能像素测距模式（或按住 Alt 键悬停其它元素测距）">
+            <svg viewBox="0 0 24 24" class="icon icon-sm"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>
+            <span>测距 (Alt)</span>
+          </button>
+          <button id="toggle-glyphs" class="tool-btn active" title="使用文件内缓存字形；缺失时回退字体">
+            <svg viewBox="0 0 24 24" class="icon icon-sm"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
+            <span>字形轮廓</span>
+          </button>
+        </div>
+
+        <div class="zoom-controls">
+          <button id="btn-zoom-out" class="icon-btn" title="缩小 (-)" aria-label="缩小">
+            <svg viewBox="0 0 24 24" class="icon icon-sm"><path d="M5 12h14"/></svg>
+          </button>
+          <input id="zoom-input" type="number" value="100" min="5" max="1600" aria-label="缩放百分比">
+          <span class="zoom-unit">%</span>
+          <button id="btn-zoom-in" class="icon-btn" title="放大 (+)" aria-label="放大">
+            <svg viewBox="0 0 24 24" class="icon icon-sm"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          </button>
+          <button id="btn-zoom-100" class="btn-xs" title="100% 原始尺寸 (快捷键 1)">1:1</button>
+          <button id="btn-zoom-fit" class="btn-xs" title="适合窗口大小 (快捷键 F)">适合窗口</button>
+        </div>
+
+        <div class="export-controls">
+          <button id="btn-export-html" class="btn" title="导出原尺寸、内嵌矢量预览的离线 HTML" disabled>
+            <span>导出 HTML</span>
+          </button>
+          <button id="btn-export-svg" class="btn btn-accent" title="导出当前兼容预览 SVG" disabled>
+            <span>导出 SVG</span>
+          </button>
+          <div class="png-export-group">
+            <select id="png-scale-select" aria-label="PNG 导出倍率" title="选择高清 PNG 导出倍率">
+              <option value="1">1x</option>
+              <option value="2" selected>2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+            </select>
+            <button id="btn-export-png" class="btn" title="按所选倍率超采样导出高清 PNG" disabled>
+              <span>导出 PNG</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Single Frame Interactive Viewport -->
+      <div id="viewport" class="viewport">
+        <div id="stage" class="stage">
+          <div id="board-wrap" class="board-wrap" hidden>
+            <img id="preview-img" alt="画板矢量预览" draggable="false">
+            <svg id="hit-overlay" class="hit-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+        </div>
+
+        <!-- Gallery Overview Grid -->
+        <div id="gallery-view" class="gallery-view" hidden></div>
+
+        <!-- Empty / Loading / Drop Overlay -->
+        <div id="canvas-empty" class="canvas-empty">
+          <div class="empty-card">
+            <img id="empty-logo-img" class="empty-windmill" src="figfig-light.svg" alt="" aria-hidden="true">
+            <strong id="empty-title">未打开文件</strong>
+            <p id="empty-subtitle">FigFig</p>
+          </div>
+        </div>
+
+        <div id="drop-overlay" class="drop-overlay" hidden>
+          <div class="drop-box">
+            <strong>打开 .fig 文件</strong>
+            <span>不会修改原文件任何字节 · 自动计算 SHA-256 校验</span>
+          </div>
+        </div>
+      </div>
+
+      <footer class="statusbar">
+        <span id="status-text" role="status" aria-live="polite">就绪</span>
+        <span id="hover-readout" class="hover-readout"></span>
+        <span id="dimensions-readout" class="dimensions-readout"></span>
+      </footer>
+    </section>
+
+    <div id="resize-inspector" class="panel-resizer" role="separator" tabindex="0" aria-orientation="vertical" aria-controls="properties-panel" aria-label="调整属性栏宽度" title="拖动调整属性栏宽度；双击恢复默认宽度"></div>
+
+    <!-- Right Inspector Panel -->
+    <aside id="properties-panel" class="inspector" aria-label="节点属性与开发标注">
+      <div class="inspector-header">
+        <strong>属性</strong>
+        <div class="inspector-actions">
+          <button id="btn-copy-css" class="btn-xs" title="一键复制当前节点 CSS 样式代码" disabled>复制 CSS</button>
+          <button id="btn-copy-text" class="btn-xs" title="复制节点纯文本内容" disabled>复制文案</button>
+          <button id="btn-copy-json" class="btn-xs" title="复制当前节点或已解析实例的 JSON 数据" disabled>复制 JSON</button>
+        </div>
+      </div>
+      <div id="inspector-body" class="inspector-body">
+        <div class="muted-empty">在左侧选择画板，或直接在画布上点击任意文字、按钮、卡片即可查看精确尺寸、色值与 CSS 代码。</div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Integrity & Compatibility Dialog -->
+  <dialog id="dialog-report">
+    <div class="dialog-header">
+      <strong>文件指纹与渲染兼容性</strong>
+      <button id="btn-close-report" class="icon-btn" aria-label="关闭">✕</button>
+    </div>
+    <div id="report-body" class="dialog-body"></div>
+  </dialog>
+
+  <!-- MCP Protocol Integration Dialog -->
+  <dialog id="dialog-mcp">
+    <div class="dialog-header">
+      <strong>MCP 协议服务（VS Code / Claude / Cursor 直连读取）</strong>
+      <button id="btn-close-mcp" class="icon-btn" aria-label="关闭">✕</button>
+    </div>
+    <div class="dialog-body">
+      <p class="mcp-intro">本地 MCP 只读服务配置</p>
+      <div class="insp-card">
+        <h3>
+          <span>VS Code (.vscode/mcp.json) 配置</span>
+          <button id="btn-copy-mcp-vscode" class="btn-xs">复制配置</button>
+        </h3>
+        <pre id="mcp-vscode-code" class="code-block"></pre>
+      </div>
+      <div class="insp-card">
+        <h3><span>已注册的 7 个只读 MCP 工具</span></h3>
+        <div class="shortcut-grid">
+          <div class="shortcut-row"><kbd>figfig_list_local_files</kbd><span>扫描本机 Downloads / Desktop 中的 .fig 文件清单</span></div>
+          <div class="shortcut-row"><kbd>figfig_list_pages</kbd><span>读取 .fig 文件 SHA-256 指纹、节点数及全部页面列表</span></div>
+          <div class="shortcut-row"><kbd>figfig_get_frames</kbd><span>分页列出指定页面下的所有画板 (Frames)</span></div>
+          <div class="shortcut-row"><kbd>figfig_search</kbd><span>搜索画板、图层名称、原始文字与显式文字覆盖</span></div>
+          <div class="shortcut-row"><kbd>figfig_read_node</kbd><span>读取指定节点的坐标、Auto-Layout、色值与自动生成 CSS</span></div>
+          <div class="shortcut-row"><kbd>figfig_render_frame</kbd><span>渲染指定画板并返回已解析文字 + 高清 PNG 图像流</span></div>
+          <div class="shortcut-row"><kbd>figfig_compatibility</kbd><span>获取字形轮廓覆盖率与渲染兼容性风险清单</span></div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Shortcuts Guide Dialog -->
+  <dialog id="dialog-help">
+    <div class="dialog-header">
+      <strong>FigFig 极速操作与快捷键指南</strong>
+      <button id="btn-close-help" class="icon-btn" aria-label="关闭">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="shortcut-grid">
+        <div class="shortcut-row"><kbd>鼠标滚轮</kbd><span>以鼠标指针为中心无级缩放画布 (5% ~ 1600%)</span></div>
+        <div class="shortcut-row"><kbd>空格 + 左键拖拽</kbd><span>或按住鼠标中键拖拽平移画布</span></div>
+        <div class="shortcut-row"><kbd>画布左键点击</kbd><span>直接穿透选中鼠标下的子图层（文字/按钮/图标/组件）并在右侧展示 CSS 与属性</span></div>
+        <div class="shortcut-row"><kbd>按住 Alt + 悬停</kbd><span>测量当前选中图层与鼠标悬停图层之间的上下左右像素间距</span></div>
+        <div class="shortcut-row"><kbd>Ctrl + O</kbd><span>打开本地 .fig / .deck 文件（支持直接拖拽文件到窗口）</span></div>
+        <div class="shortcut-row"><kbd>Ctrl + F</kbd><span>聚焦全局搜索框（支持跨全部页面秒搜中英文文案）</span></div>
+        <div class="shortcut-row"><kbd>F</kbd><span>画板自适应窗口大小 (Fit to Screen)</span></div>
+        <div class="shortcut-row"><kbd>1</kbd><span>画板恢复 100% 原始像素比例 (1:1)</span></div>
+        <div class="shortcut-row"><kbd>G</kbd><span>在「单画板精览」与「整页网格总览」之间切换</span></div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

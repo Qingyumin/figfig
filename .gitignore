@@ -1,0 +1,15 @@
+# Build & runtime caches
+.build/
+node_modules/
+verification/
+_temp_profile_*/
+*.log
+
+# Compiled release packages (generated via tools/build.ps1)
+release/
+
+# Exclude external or user .fig / .deck files while keeping the built-in showcase
+*.fig
+*.deck
+!assets/sample-showcase.fig
+!dist/sample-showcase.fig

@@ -1,0 +1,24 @@
+{
+  "name": "figfig",
+  "productName": "FigFig",
+  "version": "1.2.0",
+  "description": "FigFig - local read-only Figma viewer with instance-scoped compatible rendering",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build:web": "node tools/build.mjs",
+    "verify": "node tools/verify.mjs",
+    "mcp": "node mcp/server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.27.1",
+    "@resvg/resvg-wasm": "2.6.2",
+    "lucide": "0.468.0",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "pngjs": "7.0.0"
+  }
+}
